@@ -10,10 +10,28 @@ class PaymentScreen extends StatefulWidget {
 
 class _PaymentScreenState extends State<PaymentScreen> {
   final _recipientEmailController = TextEditingController();
+  final _amountController = TextEditingController();
+  late Future<double> _userBalanceFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _userBalanceFuture = _fetchUserBalance();
+  }
+
+  Future<double> _fetchUserBalance() async {
+    final user = Provider.of<AuthService>(context, listen: false).user;
+    final userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user!.id)
+        .get();
+    return userDoc['balance']?.toDouble() ?? 0.0;
+  }
 
   Future<void> _makePayment() async {
     final user = Provider.of<AuthService>(context, listen: false).user;
     final recipientEmail = _recipientEmailController.text.trim();
+    final paymentAmount = double.tryParse(_amountController.text.trim()) ?? 0.0;
 
     if (recipientEmail.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -25,6 +43,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
     if (recipientEmail == user!.email) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('You cannot transfer money to yourself!')),
+      );
+      return;
+    }
+
+    if (paymentAmount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter a valid payment amount.')),
       );
       return;
     }
@@ -45,27 +70,70 @@ class _PaymentScreenState extends State<PaymentScreen> {
       }
 
       final recipientData = recipientSnapshot.docs.first;
-      final recipientBalance = recipientData['balance'] ?? 0.0;
+      final recipientBalance = recipientData['balance']?.toDouble() ?? 0.0;
 
-      if (user.balance > 0) {
-        // Update sender's balance
-        final senderDoc =
-            FirebaseFirestore.instance.collection('users').doc(user.id);
-        senderDoc
-            .update({'balance': user.balance - 10}); // Example payment amount
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.id)
+          .get();
+      final userBalance = userDoc['balance']?.toDouble() ?? 0.0;
 
-        // Update recipient's balance
-        final recipientDoc = FirebaseFirestore.instance
-            .collection('users')
-            .doc(recipientData.id);
-        recipientDoc.update({'balance': recipientBalance + 10});
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Payment successful to $recipientEmail!'),
-            backgroundColor: Colors.green,
-          ),
+      if (userBalance >= paymentAmount) {
+        // Show confirmation dialog
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text('Confirm Payment'),
+              content: Text(
+                'Are you sure you want to transfer \$${paymentAmount.toStringAsFixed(2)} to ${recipientEmail}?',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                  },
+                  child: Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(true);
+                  },
+                  child: Text('Confirm'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                  ),
+                ),
+              ],
+            );
+          },
         );
+
+        if (confirm == true) {
+          // Update sender's balance by subtracting the payment amount
+          final senderDoc =
+              FirebaseFirestore.instance.collection('users').doc(user.id);
+          await senderDoc.update({'balance': userBalance - paymentAmount});
+
+          // Update recipient's balance by adding the payment amount
+          final recipientDoc = FirebaseFirestore.instance
+              .collection('users')
+              .doc(recipientData.id);
+          await recipientDoc
+              .update({'balance': recipientBalance + paymentAmount});
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Payment successful to $recipientEmail!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Refresh the user's balance
+          setState(() {
+            _userBalanceFuture = _fetchUserBalance();
+          });
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -86,8 +154,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = Provider.of<AuthService>(context).user;
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Payment'),
@@ -97,18 +163,38 @@ class _PaymentScreenState extends State<PaymentScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Your current balance is \$${user?.balance.toStringAsFixed(2) ?? '0.00'}',
-              style: TextStyle(
-                fontSize: 24.0,
-                color: Colors.grey[600],
-              ),
+            FutureBuilder<double>(
+              future: _userBalanceFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator();
+                } else if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                } else {
+                  final balance = snapshot.data ?? 0.0;
+                  return Text(
+                    'Your current balance is \$${balance.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 24.0,
+                      color: Colors.grey[600],
+                    ),
+                  );
+                }
+              },
             ),
             const SizedBox(height: 24.0),
             TextField(
               controller: _recipientEmailController,
               decoration: InputDecoration(
                 labelText: 'Recipient\'s Email',
+              ),
+            ),
+            const SizedBox(height: 24.0),
+            TextField(
+              controller: _amountController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: 'Payment Amount',
               ),
             ),
             const SizedBox(height: 24.0),
