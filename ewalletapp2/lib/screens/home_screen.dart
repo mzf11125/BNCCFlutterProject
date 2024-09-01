@@ -1,15 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(authService.user!.id)
+        .get();
+
+    if (userDoc.exists) {
+      final userData = userDoc.data();
+      setState(() {
+        authService.user!.balance = userData!['balance']?.toDouble() ?? 0.0;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<AuthService>(context).user;
+
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Home'),
         actions: [
           IconButton(

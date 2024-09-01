@@ -5,6 +5,9 @@ import 'services/auth_service.dart';
 import 'package:ewalletapp2/screens/login_screen.dart';
 import 'screens/signup_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/pay_screen.dart';
+import 'screens/profile_screen.dart';
+import 'screens/topup_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +35,9 @@ class MyApp extends StatelessWidget {
           '/login': (context) => LoginScreen(),
           '/signup': (context) => SignUpScreen(),
           '/home': (context) => HomeScreen(),
+          '/payment': (context) => PaymentScreen(),
+          '/topup': (context) => TopUpScreen(),
+          '/profile': (context) => ProfileScreen(),
         },
       ),
     );
