@@ -22,6 +22,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: Theme(
+          data: Theme.of(context).copyWith(
+            iconTheme: IconThemeData(color: Colors.white),
+          ),
+          child: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ),
         title: Text('Edit Profile', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.blue.shade700,
         elevation: 0,

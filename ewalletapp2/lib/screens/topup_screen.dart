@@ -58,13 +58,18 @@ class _TopUpScreenState extends State<TopUpScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: Text('Cancel'),
+              child: Text('Cancel', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                textStyle: TextStyle(color: Colors.white),
+              ),
             ),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: Text('Confirm'),
+              child: Text('Confirm', style: TextStyle(color: Colors.white)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
+                textStyle: TextStyle(color: Colors.white),
               ),
             ),
           ],
@@ -79,6 +84,17 @@ class _TopUpScreenState extends State<TopUpScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: Theme(
+          data: Theme.of(context).copyWith(
+            iconTheme: IconThemeData(color: Colors.white),
+          ),
+          child: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ),
         title: Text('Top Up', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.blue.shade700,
         elevation: 0,
