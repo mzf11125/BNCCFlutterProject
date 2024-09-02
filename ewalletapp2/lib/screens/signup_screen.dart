@@ -41,22 +41,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   SizedBox(height: 30),
                   _buildTextField(
-                    label: 'Password',
-                    icon: Icons.lock,
-                    obscureText: true,
+                    label: 'Full Name',
+                    icon: Icons.person,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter a password';
+                        return 'Please enter your full name';
                       }
-                      if (value.length < 6) {
-                        return 'Password must be at least 6 characters long';
-                      }
-                      if (_password != _confirmPassword) {
-                        return 'Passwords do not match';
+                      if (value.length < 5) {
+                        return 'Full name must be at least 5 characters long';
                       }
                       return null;
                     },
-                    onSaved: (value) => _password = value!,
+                    onSaved: (value) => _fullName = value!,
                   ),
                   SizedBox(height: 20),
                   _buildTextField(
@@ -114,6 +110,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       return null;
                     },
                     onSaved: (value) => _password = value!,
+                    onChanged: (value) => setState(() => _password = value),
                   ),
                   SizedBox(height: 20),
                   _buildTextField(
@@ -130,6 +127,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       return null;
                     },
                     onSaved: (value) => _confirmPassword = value!,
+                    onChanged: (value) =>
+                        setState(() => _confirmPassword = value),
                   ),
                   SizedBox(height: 30),
                   ElevatedButton(
@@ -174,6 +173,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     bool obscureText = false,
     required String? Function(String?) validator,
     required void Function(String?) onSaved,
+    void Function(String)? onChanged,
   }) {
     return TextFormField(
       decoration: InputDecoration(
@@ -192,12 +192,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
       obscureText: obscureText,
       validator: validator,
       onSaved: onSaved,
+      onChanged: onChanged,
     );
   }
 
   void _handleSignUp() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
+      if (_password != _confirmPassword) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Passwords do not match')),
+        );
+        return;
+      }
       setState(() {
         _isLoading = true;
       });
