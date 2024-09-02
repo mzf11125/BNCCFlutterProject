@@ -137,7 +137,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       padding: EdgeInsets.symmetric(vertical: 16),
                       child: _isLoading
                           ? CircularProgressIndicator(color: Colors.white)
-                          : Text('Sign Up', style: TextStyle(fontSize: 18)),
+                          : Text('Sign Up',
+                              style:
+                                  TextStyle(fontSize: 18, color: Colors.white)),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue.shade700,

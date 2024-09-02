@@ -115,7 +115,9 @@ class _LoginScreenState extends State<LoginScreen>
                         padding: EdgeInsets.symmetric(vertical: 16),
                         child: _isLoading
                             ? CircularProgressIndicator(color: Colors.white)
-                            : Text('Login', style: TextStyle(fontSize: 18)),
+                            : Text('Login',
+                                style: TextStyle(
+                                    fontSize: 18, color: Colors.white)),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue.shade700,
