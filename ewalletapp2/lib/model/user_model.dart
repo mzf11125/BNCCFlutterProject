@@ -39,6 +39,25 @@ class UserModel {
     };
   }
 
+  // Copy with method to create a new instance with updated properties
+  UserModel copyWith({
+    String? id,
+    String? fullName,
+    String? username,
+    String? phoneNumber,
+    String? email,
+    double? balance,
+  }) {
+    return UserModel(
+      id: id ?? this.id,
+      fullName: fullName ?? this.fullName,
+      username: username ?? this.username,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      email: email ?? this.email,
+      balance: balance ?? this.balance,
+    );
+  }
+
   // Fetch user data from Firestore
   static Future<UserModel?> getUserById(String userId) async {
     final docRef = FirebaseFirestore.instance.collection('users').doc(userId);

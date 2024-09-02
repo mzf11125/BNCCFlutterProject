@@ -14,7 +14,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? _username;
   String? _phoneNumber;
   String? _email;
-  double? _balance;
   bool _isLoading = false;
 
   @override
@@ -23,126 +22,181 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Edit Profile'),
+        title: Text('Edit Profile', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.blue.shade700,
+        elevation: 0,
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: ListView(
-                  children: [
-                    TextFormField(
-                      initialValue: user?.fullName,
-                      decoration: InputDecoration(labelText: 'Full Name'),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your full name';
-                        }
-                        return null;
-                      },
-                      onSaved: (value) => _fullName = value,
-                    ),
-                    TextFormField(
-                      initialValue: user?.username,
-                      decoration: InputDecoration(labelText: 'Username'),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your username';
-                        }
-                        return null;
-                      },
-                      onSaved: (value) => _username = value,
-                    ),
-                    TextFormField(
-                      initialValue: user?.phoneNumber,
-                      decoration: InputDecoration(labelText: 'Phone Number'),
-                      keyboardType: TextInputType.phone,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your phone number';
-                        }
-                        return null;
-                      },
-                      onSaved: (value) => _phoneNumber = value,
-                    ),
-                    TextFormField(
-                      initialValue: user?.email,
-                      decoration: InputDecoration(labelText: 'Email'),
-                      keyboardType: TextInputType.emailAddress,
-                      validator: (value) {
-                        if (value == null ||
-                            value.isEmpty ||
-                            !value.contains('@')) {
-                          return 'Please enter a valid email';
-                        }
-                        return null;
-                      },
-                      onSaved: (value) => _email = value,
-                    ),
-                    TextFormField(
-                      initialValue: user?.balance.toString(),
-                      decoration: InputDecoration(labelText: 'Balance'),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || double.tryParse(value) == null) {
-                          return 'Please enter a valid number';
-                        }
-                        return null;
-                      },
-                      onSaved: (value) => _balance = double.tryParse(value!),
-                    ),
-                    SizedBox(height: 20),
-                    ElevatedButton(
-                      child: Text('Save'),
-                      onPressed: () async {
-                        if (_formKey.currentState!.validate()) {
-                          _formKey.currentState!.save();
-                          setState(() {
-                            _isLoading = true;
-                          });
-
-                          // Create a new user model with the updated data
-                          final updatedUser = UserModel(
-                            id: user!.id,
-                            fullName: _fullName ?? user.fullName,
-                            username: _username ?? user.username,
-                            phoneNumber: _phoneNumber ?? user.phoneNumber,
-                            email: _email ?? user.email,
-                            balance: _balance ?? user.balance,
-                          );
-
-                          try {
-                            // Save the updated user data to Firestore
-                            await updatedUser.saveToFirestore();
-
-                            // Show success message
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content:
-                                      Text('Profile updated successfully!')),
-                            );
-
-                            // Navigate back to the previous screen
-                            Navigator.pop(context);
-                          } catch (e) {
-                            // Show error message
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('An error occurred: $e')),
-                            );
-                          } finally {
-                            setState(() {
-                              _isLoading = false;
-                            });
+          : SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.all(24.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      CircleAvatar(
+                        radius: 50,
+                        backgroundColor: Colors.blue.shade200,
+                        child:
+                            Icon(Icons.person, size: 50, color: Colors.white),
+                      ),
+                      SizedBox(height: 24),
+                      _buildTextField(
+                        initialValue: user?.fullName,
+                        label: 'Full Name',
+                        icon: Icons.person,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your full name';
                           }
-                        }
-                      },
-                    ),
-                  ],
+                          if (value.length < 5) {
+                            return 'Full name must be at least 5 characters long';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) => _fullName = value,
+                      ),
+                      SizedBox(height: 16),
+                      _buildTextField(
+                        initialValue: user?.username,
+                        label: 'Username',
+                        icon: Icons.account_circle,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your username';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) => _username = value,
+                      ),
+                      SizedBox(height: 16),
+                      _buildTextField(
+                        initialValue: user?.phoneNumber,
+                        label: 'Phone Number',
+                        icon: Icons.phone,
+                        keyboardType: TextInputType.phone,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your phone number';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) => _phoneNumber = value,
+                      ),
+                      SizedBox(height: 16),
+                      _buildTextField(
+                        initialValue: user?.email,
+                        label: 'Email',
+                        icon: Icons.email,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          if (value == null ||
+                              value.isEmpty ||
+                              !value.contains('@')) {
+                            return 'Please enter a valid email';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) => _email = value,
+                      ),
+                      SizedBox(height: 32),
+                      ElevatedButton(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Text('Save Changes',
+                              style:
+                                  TextStyle(fontSize: 18, color: Colors.white)),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue.shade700,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: _saveChanges,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
     );
+  }
+
+  Widget _buildTextField({
+    required String label,
+    required IconData icon,
+    String? initialValue,
+    TextInputType? keyboardType,
+    required String? Function(String?) validator,
+    required void Function(String?) onSaved,
+  }) {
+    return TextFormField(
+      initialValue: initialValue,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: Colors.blue.shade700),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
+        ),
+      ),
+      keyboardType: keyboardType,
+      validator: validator,
+      onSaved: onSaved,
+    );
+  }
+
+  void _saveChanges() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      setState(() {
+        _isLoading = true;
+      });
+
+      final user = Provider.of<AuthService>(context, listen: false).user!;
+
+      // Create a new user model with the updated data
+      final updatedUser = UserModel(
+        id: user.id,
+        fullName: _fullName ?? user.fullName,
+        username: _username ?? user.username,
+        phoneNumber: _phoneNumber ?? user.phoneNumber,
+        email: _email ?? user.email,
+      );
+
+      try {
+        // Save the updated user data to Firestore
+        await updatedUser.saveToFirestore();
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Profile updated successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Navigate back to the previous screen
+        Navigator.pop(context);
+      } catch (e) {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('An error occurred: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 }
