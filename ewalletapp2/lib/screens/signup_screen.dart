@@ -86,9 +86,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     keyboardType: TextInputType.emailAddress,
                     autofillHints: [AutofillHints.email],
                     validator: (value) {
-                      if (value == null ||
-                          value.isEmpty ||
-                          !value.contains('@')) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a valid email';
+                      }
+                      final emailRegExp = RegExp(
+                        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                      );
+                      if (!emailRegExp.hasMatch(value)) {
                         return 'Please enter a valid email';
                       }
                       return null;
